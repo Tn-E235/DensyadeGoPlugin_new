@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "atsplugin.h"
+#include "result.h"
 #include "gSensor.h"
 #include "stationDB.h"
 #include "evaluate.h"
@@ -12,6 +13,7 @@ ATS_API int WINAPI GetPluginVersion() { return ATS_VERSION; }
 ATS_API void WINAPI SetVehicleSpec(ATS_VEHICLESPEC vehicleSpec) {
 	g_svcBrake = vehicleSpec.BrakeNotches;
 	g_emgBrake = g_svcBrake + 1;
+	dgo.emergencyBrake(g_emgBrake);
 }
 ATS_API void WINAPI Initialize(int brake) { 
 	g_speed = 0; 
@@ -44,7 +46,7 @@ ATS_API void WINAPI KeyDown(int keyCode) {
 ATS_API void WINAPI KeyUp(int keyCode) {
 	dgo.keyUp(keyCode);
 }
-ATS_API void WINAPI HornBlow(int atsHornBlowIndex) {}
+ATS_API void WINAPI HornBlow(int atsHornBlowIndex) { dgo.hornBlow(atsHornBlowIndex); }
 ATS_API void WINAPI DoorOpen() { 
 	g_pilotlamp = false; 
 	dgo.doorState(true);

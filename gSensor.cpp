@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "atsplugin.h"
+#include "result.h"
 #include "gSensor.h"
 #include <cmath>
 void G_SENSOR::calc(ATS_VEHICLESTATE vehicleState) {

@@ -42,6 +42,9 @@
     <ClCompile Include="speedNoice.cpp">
       <Filter>Source Files\dengo</Filter>
     </ClCompile>
+    <ClCompile Include="result.cpp">
+      <Filter>Source Files\dengo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Ats.def">
@@ -71,6 +74,9 @@
       <Filter>Header Files\dengo</Filter>
     </ClInclude>
     <ClInclude Include="speedNoice.h">
+      <Filter>Header Files\dengo</Filter>
+    </ClInclude>
+    <ClInclude Include="result.h">
       <Filter>Header Files\dengo</Filter>
     </ClInclude>
   </ItemGroup>
