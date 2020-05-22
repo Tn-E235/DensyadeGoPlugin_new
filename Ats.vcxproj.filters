@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{017db6a6-5e3f-4986-a8ae-25a93a0fc614}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{51e6f9ce-f3b9-49a6-90a8-83c3825e47d1}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{f699fd9b-543b-4e9a-b2d8-6f32d85f80c9}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="Source Files\dengo">
+      <UniqueIdentifier>{9a99297d-7c43-4978-b4b0-56b01a9a44ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\dengo">
+      <UniqueIdentifier>{11765854-7e3d-40ef-9b6e-59becce1cb43}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Ats.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dengo.cpp">
+      <Filter>Source Files\dengo</Filter>
+    </ClCompile>
+    <ClCompile Include="gSensor.cpp">
+      <Filter>Source Files\dengo</Filter>
+    </ClCompile>
+    <ClCompile Include="stationDB.cpp">
+      <Filter>Source Files\dengo</Filter>
+    </ClCompile>
+    <ClCompile Include="evaluate.cpp">
+      <Filter>Source Files\dengo</Filter>
+    </ClCompile>
+    <ClCompile Include="speedNoice.cpp">
+      <Filter>Source Files\dengo</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Ats.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Ats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="atsplugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dengo.h">
+      <Filter>Header Files\dengo</Filter>
+    </ClInclude>
+    <ClInclude Include="gSensor.h">
+      <Filter>Header Files\dengo</Filter>
+    </ClInclude>
+    <ClInclude Include="stationDB.h">
+      <Filter>Header Files\dengo</Filter>
+    </ClInclude>
+    <ClInclude Include="evaluate.h">
+      <Filter>Header Files\dengo</Filter>
+    </ClInclude>
+    <ClInclude Include="speedNoice.h">
+      <Filter>Header Files\dengo</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
