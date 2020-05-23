@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "atsplugin.h"
 #include "result.h"
-#include "gSensor.h"
 #include "stationDB.h"
 #include "evaluate.h"
 #include "speedNoice.h"
+#include "gSensor.h"
 #include "dengo.h"
 #include "Ats.h"
 
@@ -26,6 +26,8 @@ ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int *panel, int
 	g_output.Power = g_powerNotch;
 	g_output.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
 	dgo.main(vehicleState, panel, sound);
+	int speedLimit = dgo.speedLimit();
+	if (vehicleState.Speed / 1000 > speedLimit ) g_output.Brake = g_svcBrake;
     return g_output;
 }
 ATS_API void WINAPI SetPower(int notch) { 

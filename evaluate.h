@@ -42,13 +42,16 @@ class EVALUTE {
 		void setInStation(int);
 		int getStar(int, double);
 
-		void setScoringItemsPointer(scoringItems*);
 		void setScoringItemsCountPointer(scoringItemsCount*);
 		void setChechedListPointer(checkedList*);
+
+		int getDigitOfNumber(int,int,int);
+		
 		dispEvalute* getBoxPointer();
 	private:
 		int delta_T = 0;
 		int currentTime = 0;
+		int beforeTime;
 		int currentSpeed;
 		double lastStopDistance;
 		double currentDistance;
@@ -66,6 +69,7 @@ class EVALUTE {
 		int brakeDuration;
 		bool inStation;
 		const int offset = 5;
+
 		struct dispEvalute box[5] = {
 			{0,0,0},
 			{0,0,0},
@@ -75,7 +79,6 @@ class EVALUTE {
 		};
 		struct horn hornInfo[3];
 		struct dispEvalute *p = box;
-		struct scoringItems* p_s_item = nullptr;
 		struct scoringItemsCount* p_s_itemCount = nullptr;
 		struct checkedList* p_cList = nullptr;
 };

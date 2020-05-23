@@ -2,9 +2,9 @@
 #include "atsplugin.h"
 #include "result.h"
 #include "evaluate.h"
-#include "gSensor.h"
 #include "stationDB.h"
 #include "speedNoice.h"
+#include "gSensor.h"
 #include "dengo.h"
 #include <cmath>
 // ------------------------------------------------------------------
@@ -16,13 +16,18 @@ void DENGO::init() {
 
 	p_station      = station.getStationDataPointer();
 	p_box          = evalute.getBoxPointer();
-	p_s_items      = result.getScoringItemsPointer();
 	p_s_itemsCount = result.getScoringItemsCountPointer();
 	p_cList        = result.getCheckedListPointer();
 
 	s_noice.setBoxPointer(p_box);
 	s_noice.setChechedListPointer(p_cList);
+	s_noice.setScoringItemsCountPointer(p_s_itemsCount);
 	evalute.setChechedListPointer(p_cList);
+	evalute.setScoringItemsCountPointer(p_s_itemsCount);
+
+	gsensor.setChechedListPointer(p_cList);
+	gsensor.setScoringItemsCountPointer(p_s_itemsCount);
+	gsensor.setBoxPointer(p_box);
 
 	update = true;
 	updateCurrentStation = 0;
@@ -48,6 +53,7 @@ void DENGO::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound){
 	s_noice.main(vehicleState, panel, sound);
 	evalute.main(vehicleState, panel, sound);
 	result.main(vehicleState, panel, sound);
+
 	panelOut(panel);
 }
 // ------------------------------------------------------------------
@@ -65,6 +71,7 @@ void DENGO::keyDown(int keyCode) {
 	if (keyCode == 0) {
 		evalute.setKey(true);
 		s_noice.setKey(true);
+		result.setKey(true);
 		return;
 	}
 }
@@ -73,6 +80,7 @@ void DENGO::keyUp(int keyCode) {
 	if (keyCode == 0) {
 		evalute.setKey(false);
 		s_noice.setKey(false);
+		result.setKey(false);
 		return;
 	}
 }
@@ -125,14 +133,14 @@ void DENGO::beaconData(ATS_BEACONDATA beaconData) {
 			break;
 	}
 }
+int DENGO::speedLimit() { return s_noice.getCurrentSpeedLimit(); }
 // ------------------------------------------------------------------
 void DENGO::emergencyBrake(int notch) { evalute.setEBnotch(notch); }
 void DENGO::reverserState(int pos) { reverser = pos; }
 void DENGO::hornBlow(int hornType) { evalute.setHornKey(hornType); }
 // ------------------------------------------------------------------
 void DENGO::panelOut(int* panel) {
-	// çXêVèàóù
-	if (update) updateInfo(panel);
+	
 	// --------------------------------------------------------------
 	// åªç›ë¨ìxï\é¶
 	panel[0] = getDigitOfNumber((int)currentSpeed, 3, 10);
@@ -181,6 +189,9 @@ void DENGO::panelOut(int* panel) {
 	// --------------------------------------------------------------
 	// écãóó£
 	remainningDistance(panel);
+
+	// çXêVèàóù
+	if (update) updateInfo(panel);
 }
 // ------------------------------------------------------------------
 // écãóó£ÇåvéZÇ∑ÇÈèàóù
@@ -194,6 +205,7 @@ void DENGO::remainningDistance(int* panel) {
 		panel[43] = 0;
 		return;
 	}
+
 	int stopDistance = station.getStopDistance(nextStation);
 	double remainningDistance = stopDistance - currentZposition;
 	stationData s = station.getStationData(nextStation);
@@ -212,6 +224,7 @@ void DENGO::remainningDistance(int* panel) {
 		}
 		if (remainningDistance < 0.0) over = 2;
 	}
+	result.setRemainnigDistance(remainningDistance*unit);
 	panel[34] = getDigitOfNumber((int)(abs(remainningDistance)*unit), 4, 30)+color;
 	panel[35] = getDigitOfNumber((int)(abs(remainningDistance)*unit), 3, 30)+color;
 	panel[36] = getDigitOfNumber((int)(abs(remainningDistance)*unit), 2, 30)+color;
@@ -236,7 +249,7 @@ void DENGO::remainningTime(int* panel) {
 	int mode = 0;
 
 	if (mode == 0) {
-		int arriveTime = station.getArriveTime(nextStation);
+		int arriveTime = station.getArriveTime(nextStopStation-1);
 		// 12:34:56
 		int h = arriveTime / 10000;
 		int m = arriveTime / 100 % 100;
@@ -251,6 +264,7 @@ void DENGO::remainningTime(int* panel) {
 		}
 		if (remainningTime < 0) over = 2;
 	}
+	result.setRemainningTime(remainningTime);
 	panel[31] = getDigitOfNumber(abs(remainningTime), 3, 30) + color;
 	panel[32] = getDigitOfNumber(abs(remainningTime), 2, 30) + color;
 	panel[33] = getDigitOfNumber(abs(remainningTime), 1,  0) + color;
@@ -291,14 +305,13 @@ void DENGO::updateInfo(int* panel) {
 		update = false;
 		return;
 	}
-
 	currentStation = updateCurrentStation;	// é©é‘åªç›âwÇçXêV
 	nextStation = currentStation + 1;		// éüâwÇê›íË
 	stationData nextStopData =				// éüâwí‚é‘âwÇê›íË
 		station.getNextStopStationData(currentStation);
 	nextStopStation = station.getNum(nextStopData);		// éüâwâwî‘çÜ
 	finalStop = (nextStopStation < 0) ? true : false;	// èIíÖâwîªíË
-
+	result.setStaNum(nextStopStation);
 	if (finalStop) {
 		// ëñçsãÊä‘ï\é¶
 		// panel[25] = 0;

@@ -20,6 +20,7 @@ class SPEED_NOICE {
 		void setDoorState(bool);
 		int getStar(int, double);
 		void setChechedListPointer(checkedList*);
+		void setScoringItemsCountPointer(scoringItemsCount*);
 	private:
 		int speedLimit;
 		int currentSpeedLimit;
@@ -30,7 +31,8 @@ class SPEED_NOICE {
 		speedNoice sLimit = { false,0,0,false };
 		speedNoice cLimit = { false,0,0,false };
 		EVALUTE evalute;
-		struct dispEvalute *p_box = nullptr;
+		struct dispEvalute* p_box = nullptr;
 		struct checkedList* p_cList = nullptr;
+		struct scoringItemsCount* p_s_itemCount = nullptr;
 };
 

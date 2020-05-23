@@ -7,6 +7,7 @@ void EVALUTE::init() {
 	currentSpeed = 0;
 	currentTime = 0;
 	currentDistance = 0.0;
+	beforeTime = 0;
 	delta_T = 0;
 	b_notch = 0;
 	p_notch = 0;
@@ -39,13 +40,17 @@ void EVALUTE::init(dispEvalute* po, int n) {
 // ------------------------------------------------------------------
 void EVALUTE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 	currentTime = vehicleState.Time;
-	delta_T = currentTime - delta_T;
+	delta_T = currentTime - beforeTime;
+	beforeTime = currentTime;
 	currentDistance = vehicleState.Location;
 	currentTime = vehicleState.Time;
 	currentSpeed = (int)vehicleState.Speed;
 
 	// 停止位置取得
-	if (doorOpen) lastStopDistance = currentDistance;
+	if (doorOpen) {
+		lastStopDistance = currentDistance;
+		inStation = false;
+	}
 	// 戸閉後指差喚呼
 	pointingPilotLamp(sound);
 	// 戸閉後加速
@@ -63,7 +68,7 @@ void EVALUTE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 	// すれ違い車両に減光
 	//					実装しません
 	// Gセンサー超過
-	// 
+	//					実装済み
 	// 20km/h以上で非常ブレーキ→急制動
 	// 20km/h以下で非常ブレーキ→非常停車
 	emergencyBrake(sound);
@@ -71,7 +76,8 @@ void EVALUTE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 	reAccelerateInForm(sound);
 	// ブレーキ込め直し
 	brakeReload(sound);
-
+	// 後退したらオーバーラン判定
+	if (currentSpeed < -1 && p_notch > 0 ) p_cList->overRun = true;
 	disp(panel);
 	updateInfo();
 }
@@ -159,9 +165,10 @@ void EVALUTE::pointingPilotLamp(int* sound) {
 	if (!doorOpen && isStopPosition()) {
 		if (p_notch == 0 && b_notch > 0 && currentSpeed == 0) {
 			if (keyPush) {
-				// ☆3
 				if (p_cList->pointingPilotLamp) return;
+				// ☆3
 				p_cList->pointingPilotLamp = true;
+				p_s_itemCount->pointingPilotLamp = 300;
 				sound[0] = ATS_SOUND_PLAY;
 				setDisp(1, 3);
 			}
@@ -169,6 +176,7 @@ void EVALUTE::pointingPilotLamp(int* sound) {
 			// ☆0
 			if (p_cList->pointingPilotLamp) return;
 			p_cList->pointingPilotLamp = true;
+			p_s_itemCount->pointingPilotLamp = -300;
 			setDisp(1, 0);
 		}
 	}
@@ -179,10 +187,12 @@ void EVALUTE::acclerateAfterDoorClose(int* sound) {
 		if (p_cList->accelerateAfterDoorClose) return;
 		if (!doorOpen) {
 			// ☆3
+			p_s_itemCount->accelerateAfterDoorClose = 300;
 			sound[0] = ATS_SOUND_PLAY;
 			setDisp(2, 3);
 		} else {
 			// ☆0
+			p_s_itemCount->accelerateAfterDoorClose = -300;
 			setDisp(2, 0);
 		}
 		p_cList->accelerateAfterDoorClose = true;
@@ -216,11 +226,14 @@ void EVALUTE::hornTo(int* sound) {
 			hornInfo[i].noicePoint + (double)hornInfo[i].distance - currentDistance;
 		if (hornKey) {
 			int star = getStar(hornInfo[i].distance, remainingDistance);
+			p_s_itemCount->hornTo += star * 100;
 			setDisp(6+i, star);
 			hornInfo[i].enable = false;
+			sound[0] = ATS_SOUND_PLAY;
 			continue;
 		}
 		if (remainingDistance < 0) {
+			p_s_itemCount->hornTo -= 300;
 			setDisp(6 + i, 0);
 			hornInfo[i].enable = false;
 		}
@@ -231,6 +244,7 @@ void EVALUTE::emergencyBrake(int*) {
 	if(b_notch != ebNotch) isEB = false;
 	if (b_notch == ebNotch && !isEB && currentSpeed > 0) {
 		isEB = true;
+		p_s_itemCount->eBrake -= 300;
 		if (currentSpeed >= 20) {
 			setDisp(11, 0);
 		} else {
@@ -243,19 +257,22 @@ void EVALUTE::reAccelerateInForm(int*) {
 	if (!inStation || p_cList->reAccelerateInForm) return;
 	if (maxPnotchInStation < p_notch) { 
 		p_cList->reAccelerateInForm = true;
-		// setDisp(1, 0);
+		p_s_itemCount->reAccelerateInForm++;
 	}
 }
 // ------------------------------------------------------------------
 void EVALUTE::brakeReload(int*) {
 	if (!inStation || p_cList->brakeReload) return;
 	if (maxBnotchInStation == 0) return;
-	if (b_notch > maxBnotchInStation) maxBnotchInStation = b_notch;
-	if (b_b_notch == b_notch) brakeDuration += delta_T;
+	if (b_notch > maxBnotchInStation && brakeDuration < 500) 
+		maxBnotchInStation = b_notch;
+	if (b_b_notch >= b_notch) brakeDuration += delta_T;
 	if (b_b_notch < b_notch && brakeDuration < 500) {
 		brakeDuration = 0;
-	} else if (brakeDuration > 500) {
+	} else if (brakeDuration > 500 || b_notch > maxBnotchInStation) {
 		maxBnotchInStation = b_notch;
+		p_cList->brakeReload = true;
+		p_s_itemCount->brakeReload = -300;
 	}
 	b_b_notch = b_notch;
 }
@@ -281,6 +298,7 @@ void EVALUTE::setInStation(int sendData) {
 	maxPnotchInStation = p_notch;
 	maxBnotchInStation = b_notch;
 	b_b_notch = b_notch;
+	p_cList->Gsenser = false;
 }
 // ------------------------------------------------------------------
 void EVALUTE::setKey(bool b) { keyPush = b; }
@@ -288,7 +306,20 @@ void EVALUTE::setDoorState(bool b) { doorOpen = b; }
 void EVALUTE::setNotchState(int b, int p) { b_notch = b; p_notch = p; }
 void EVALUTE::setEBnotch(int notch) { ebNotch = notch; }
 void EVALUTE::setLastStopDistance(int dis) { if (doorOpen) lastStopDistance = dis; }
-void EVALUTE::setScoringItemsPointer(scoringItems* p) { p_s_item = p; }
 void EVALUTE::setScoringItemsCountPointer(scoringItemsCount* p) { p_s_itemCount = p; }
 void EVALUTE::setChechedListPointer(checkedList* p) { p_cList = p; }
+// ------------------------------------------------------------------
+int EVALUTE::getDigitOfNumber(int num, int digit, int rt) {
+	int n = 0;
+	for (int i = 0; i < 10; ++i) {
+		if (num / pow(10, i) < 1) {
+			n = i;
+			break;
+		}
+	}
+	if (digit > n) return rt;
+	int result = (int)(num / pow(10, digit - 1)) % 10;
+	if (digit >= n && result == 0) return rt;
+	return result;
+}
 dispEvalute* EVALUTE::getBoxPointer() { return p; }

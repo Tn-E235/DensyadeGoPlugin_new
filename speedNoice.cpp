@@ -69,6 +69,7 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 				int star = 
 					getStar(sLimit.distance, sLimit.distance - abs(remainningDistance));
 				evalute.setDisp(p_box, 3, star);
+				p_s_itemCount->pointingSpeed += star * 100;
 				sound[0] = ATS_SOUND_PLAY;
 			}
 		}
@@ -80,8 +81,10 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			panel[20] = 0;
 			if (sLimit.speed + 1 > (int)currentSpeed && !doorOpen) {
 				evalute.setDisp(p_box, 4, 3);
+				p_s_itemCount->keepSpeedLimit += 300;
 				sound[2] = ATS_SOUND_PLAY;
 			} else {
+				p_s_itemCount->keepSpeedLimit -= 300;
 				evalute.setDisp(p_box,4, 0);
 			}
 			currentSpeedLimit = sLimit.speed;
@@ -116,6 +119,7 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 				int star =
 					getStar(cLimit.distance, cLimit.distance - abs(remainningDistance));
 				evalute.setDisp(p_box, 3, star);
+				p_s_itemCount->pointingSpeed += star * 100;
 				sound[0] = ATS_SOUND_PLAY;
 			}
 		}
@@ -128,12 +132,15 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			double tolerance = abs((int)currentSpeed - cLimit.speed);
 			if (tolerance < 2) {
 				sound[2] = ATS_SOUND_PLAY;
+				p_s_itemCount->keepConstantSpeed += 300;
 				evalute.setDisp(p_box, 5, 3);
 			} else if (tolerance < 6) {
 				sound[3] = ATS_SOUND_PLAY;
+				p_s_itemCount->keepConstantSpeed += 200;
 				evalute.setDisp(p_box, 5, 2);
 			} else if (tolerance < 11) {
 				sound[4] = ATS_SOUND_PLAY;
+				p_s_itemCount->keepConstantSpeed += 100;
 				evalute.setDisp(p_box, 5, 1);
 			} else {
 				evalute.setDisp(p_box, 5, 0);
@@ -186,6 +193,7 @@ int SPEED_NOICE::getCurrentSpeedLimit() { return currentSpeedLimit; }
 void SPEED_NOICE::setKey(bool b) { keyPush = b; }
 void SPEED_NOICE::setDoorState(bool b) { doorOpen = b; }
 void SPEED_NOICE::setChechedListPointer(checkedList* p) { p_cList = p; }
+void SPEED_NOICE::setScoringItemsCountPointer(scoringItemsCount* p) { p_s_itemCount = p; }
 // ------------------------------------------------------------------
 // w’èŒ…‚Ì”š‚ğ•Ô‚·
 // 0‚Ìrt‚ğ•Ô‚·

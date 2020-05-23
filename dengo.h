@@ -25,12 +25,12 @@ class DENGO{
 		void hornBlow(int);
 		void doorState(bool);
 		void beaconData(ATS_BEACONDATA);
-
+		int speedLimit();
+		int getDigitOfNumber(int, int, int);
 	private:
 		void panelOut(int*);
 		void remainningDistance(int*);
 		void remainningTime(int*);
-		int getDigitOfNumber(int, int, int);
 		void updateInfo(int*);
 
 		bool doorOpen;				// ÉhÉAèÛë‘
