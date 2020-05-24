@@ -264,15 +264,21 @@ void EVALUTE::reAccelerateInForm(int*) {
 void EVALUTE::brakeReload(int*) {
 	if (!inStation || p_cList->brakeReload) return;
 	if (maxBnotchInStation == 0) return;
-	if (b_notch > maxBnotchInStation && brakeDuration < 500) 
-		maxBnotchInStation = b_notch;
-	if (b_b_notch >= b_notch) brakeDuration += delta_T;
-	if (b_b_notch < b_notch && brakeDuration < 500) {
+	if (b_b_notch > b_notch || brakeDuration > 500) {
+		// ÉuÉåÅ[ÉLä…ÇﬂÇΩÇ∆Ç´
+		maxBnotchInStation = -1;
+		brakeDuration = 1000;
+	}
+	if (maxBnotchInStation == -1) {
+		if (b_b_notch < b_notch) {
+			p_cList->brakeReload = true;
+			p_s_itemCount->brakeReload = -300;
+		}
+	} else if (b_b_notch == b_notch) {
+		brakeDuration += delta_T; 
+	} else if (b_b_notch < b_notch) { 
 		brakeDuration = 0;
-	} else if (brakeDuration > 500 || b_notch > maxBnotchInStation) {
 		maxBnotchInStation = b_notch;
-		p_cList->brakeReload = true;
-		p_s_itemCount->brakeReload = -300;
 	}
 	b_b_notch = b_notch;
 }
@@ -299,6 +305,7 @@ void EVALUTE::setInStation(int sendData) {
 	maxBnotchInStation = b_notch;
 	b_b_notch = b_notch;
 	p_cList->Gsenser = false;
+	brakeDuration = 0;
 }
 // ------------------------------------------------------------------
 void EVALUTE::setKey(bool b) { keyPush = b; }

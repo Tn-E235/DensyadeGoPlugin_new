@@ -90,7 +90,7 @@ void RESULT::dispResult(int* panel) {
 	panel[69] = staNum;
 	panel[85] = 0;
 	panel[86] = (cList.reAccelerateInForm) ? 1 : 4;
-	panel[87] = (cList.brakeReload) ? 4 : 1 ;
+	panel[87] = (cList.brakeReload) ? 1 : 4 ;
 	panel[88] = (cList.Gsenser) ? 1 : 4;
 	panel[89] = 0;
 
