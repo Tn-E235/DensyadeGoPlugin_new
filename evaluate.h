@@ -49,9 +49,8 @@ class EVALUTE {
 		
 		dispEvalute* getBoxPointer();
 	private:
-		int delta_T = 0;
-		int currentTime = 0;
-		int beforeTime;
+		int delta_T;
+		int currentTime;
 		int currentSpeed;
 		double lastStopDistance;
 		double currentDistance;

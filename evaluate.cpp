@@ -4,11 +4,10 @@
 #include "evaluate.h"
 // ------------------------------------------------------------------
 void EVALUTE::init() {
+	delta_T = 0;
 	currentSpeed = 0;
 	currentTime = 0;
 	currentDistance = 0.0;
-	beforeTime = 0;
-	delta_T = 0;
 	b_notch = 0;
 	p_notch = 0;
 	doorOpen = false;
@@ -39,9 +38,8 @@ void EVALUTE::init(dispEvalute* po, int n) {
 }
 // ------------------------------------------------------------------
 void EVALUTE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
+	delta_T = vehicleState.Time - currentTime;
 	currentTime = vehicleState.Time;
-	delta_T = currentTime - beforeTime;
-	beforeTime = currentTime;
 	currentDistance = vehicleState.Location;
 	currentTime = vehicleState.Time;
 	currentSpeed = (int)vehicleState.Speed;
@@ -104,12 +102,12 @@ void EVALUTE::setDisp(dispEvalute* po, int i, int s) {
 // ------------------------------------------------------------------
 void EVALUTE::updateInfo() {
 	for (int i = 0; i < 5; ++i) {
-		if (box[i].idx > 0) box[i].totalTime = (int)(box[i].totalTime + (1000.0/60.0));// 1/60ïb;
-		//  if (box[i].idx > 0) box[i].totalTime = box[i].totalTime + delta_T;// 1/60ïb;
+		// if (box[i].idx > 0) box[i].totalTime = (int)(box[i].totalTime + (1000.0/60.0));// 1/60ïb;
+		if (box[i].idx > 0) box[i].totalTime = box[i].totalTime + delta_T;// 1/60ïb;
 		if (box[i].totalTime > 3000) init(i);
 	}
 	hornDuration += delta_T;
-	if (hornDuration > 5000) hornKey = false;
+	if (hornDuration > 3000) hornKey = false;
 }
 // ------------------------------------------------------------------
 void EVALUTE::pushup() {
@@ -263,8 +261,7 @@ void EVALUTE::reAccelerateInForm(int*) {
 // ------------------------------------------------------------------
 void EVALUTE::brakeReload(int*) {
 	if (!inStation || p_cList->brakeReload) return;
-	if (maxBnotchInStation == 0) return;
-	if (b_b_notch > b_notch || brakeDuration > 500) {
+	if (b_b_notch > b_notch || brakeDuration > 300) {
 		// ÉuÉåÅ[ÉLä…ÇﬂÇΩÇ∆Ç´
 		maxBnotchInStation = -1;
 		brakeDuration = 1000;
