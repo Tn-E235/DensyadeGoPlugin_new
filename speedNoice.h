@@ -16,15 +16,23 @@ class SPEED_NOICE {
 		int getCurrentSpeedLimit();
 		int getDigitOfNumber(int num, int digit, int rt);
 
+		void setKey(bool);
+		void setDoorState(bool);
+		int getStar(int, double);
+		void setChechedListPointer(checkedList*);
+		void setScoringItemsCountPointer(scoringItemsCount*);
 	private:
 		int speedLimit;
 		int currentSpeedLimit;
 		int constantSpeed;
 		int currentConstantSpeed;
-
-		speedNoice sLimit;
-		speedNoice cLimit;
+		bool keyPush;
+		bool doorOpen;
+		speedNoice sLimit = { false,0,0,false };
+		speedNoice cLimit = { false,0,0,false };
 		EVALUTE evalute;
-		struct dispEvalute *p_box = nullptr;
+		struct dispEvalute* p_box = nullptr;
+		struct checkedList* p_cList = nullptr;
+		struct scoringItemsCount* p_s_itemCount = nullptr;
 };
 

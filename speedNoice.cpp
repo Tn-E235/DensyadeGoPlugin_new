@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "atsplugin.h"
+#include "result.h"
 #include "evaluate.h"
 #include "speedNoice.h"
 #include <cmath>
-
+// ------------------------------------------------------------------
 void SPEED_NOICE::init() {
-	evalute.init();
 	speedLimit = 0;
-	currentSpeedLimit = 0;
+	currentSpeedLimit = sLimit.speed;
 	sLimit.scoring = false;
 	sLimit.distance = 0;
 	sLimit.speed = 0;
@@ -16,20 +16,43 @@ void SPEED_NOICE::init() {
 	cLimit.distance = 0;
 	cLimit.speed = 0;
 	cLimit.noicePoint = -1.0;
+	doorOpen = false;
 }
-
+// ------------------------------------------------------------------
 void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
+	float currentSpeed = vehicleState.Speed;
+	double currentLocation = vehicleState.Location;
+	if (doorOpen) {
+		sLimit.scoring = false;
+		sLimit.distance = 0;
+		sLimit.speed = 0;
+		sLimit.noicePoint = -1.0;
+		cLimit.scoring = false;
+		cLimit.distance = 0;
+		cLimit.speed = 0;
+		cLimit.noicePoint = -1.0;
+
+		panel[12] = 10;
+		panel[13] = 10;
+		panel[14] = 10;
+		panel[18] = 0;
+		panel[20] = 0;
+
+		panel[15] = 10;
+		panel[16] = 10;
+		panel[17] = 10;
+		panel[19] = 0;
+		panel[21] = 0;
+	}
+	// if (currentSpeed == 0.0) return;
 	// --------------------------------------------------------------
 	// 制限速度
-	sound[2] = ATS_SOUND_CONTINUE;
-	sound[3] = ATS_SOUND_CONTINUE;
-	sound[4] = ATS_SOUND_CONTINUE;
 	bool limitEnd = false;
 	if (sLimit.speed > 0) {
 		if (sLimit.distance < 1) limitEnd = true;
-		if (sLimit.noicePoint < 0.0) sLimit.noicePoint = vehicleState.Location; 
+		if (sLimit.noicePoint < 0.0) sLimit.noicePoint = currentLocation; 
 		double remainningDistance = 
-			vehicleState.Location - (sLimit.noicePoint + sLimit.distance);
+			currentLocation - (sLimit.noicePoint + sLimit.distance);
 		if (remainningDistance >= 0.0) {
 			limitEnd = true;
 		} else {
@@ -41,6 +64,14 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			panel[14] = getDigitOfNumber(sLimit.speed, 1,  0);
 			panel[18] = 1;
 			panel[20] = idx;	// 制限速度バー
+			if (keyPush && !p_cList->pointingSpeed) {
+				p_cList->pointingSpeed = true;
+				int star = 
+					getStar(sLimit.distance, sLimit.distance - abs(remainningDistance));
+				evalute.setDisp(p_box, 3, star);
+				p_s_itemCount->pointingSpeed += star * 300;
+				sound[0] = ATS_SOUND_PLAY;
+			}
 		}
 		if (limitEnd) {
 			panel[12] = 10;
@@ -48,11 +79,12 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			panel[14] = 10;
 			panel[18] = 0;
 			panel[20] = 0;
-			int currentSpeed = (int)vehicleState.Speed;
-			if (sLimit.speed + 1 > (int)currentSpeed) {
+			if (sLimit.speed + 1 > (int)currentSpeed && !doorOpen) {
 				evalute.setDisp(p_box, 4, 3);
+				p_s_itemCount->keepSpeedLimit += 300;
 				sound[2] = ATS_SOUND_PLAY;
 			} else {
+				p_s_itemCount->keepSpeedLimit -= 300;
 				evalute.setDisp(p_box,4, 0);
 			}
 			currentSpeedLimit = sLimit.speed;
@@ -60,15 +92,17 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			sLimit.distance = 0;
 			sLimit.speed = 0;
 			sLimit.noicePoint = -1.0;
+			if (p_cList->pointingSpeed == false) evalute.setDisp(p_box, 3, 0);
+			p_cList->pointingSpeed = false;
 		}
 	}
 	limitEnd = false;
 	// --------------------------------------------------------------
 	// 定速速度
 	if (cLimit.speed > 0) {
-		if (cLimit.noicePoint < 0.0) cLimit.noicePoint = vehicleState.Location;
+		if (cLimit.noicePoint < 0.0) cLimit.noicePoint = currentLocation;
 		double remainningDistance = 
-			vehicleState.Location - (cLimit.noicePoint + cLimit.distance);
+			currentLocation - (cLimit.noicePoint + cLimit.distance);
 		if (remainningDistance >= 0.0) {
 			limitEnd = true;
 		} else {
@@ -80,6 +114,14 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			panel[17] = getDigitOfNumber(cLimit.speed, 1, 0);
 			panel[19] = 1;
 			panel[21] = idx;	// 制限速度バー
+			if (keyPush && !p_cList->pointingConstant) {
+				p_cList->pointingConstant = true;
+				int star =
+					getStar(cLimit.distance, cLimit.distance - abs(remainningDistance));
+				evalute.setDisp(p_box, 3, star);
+				p_s_itemCount->pointingSpeed += star * 300;
+				sound[0] = ATS_SOUND_PLAY;
+			}
 		}
 		if (limitEnd) {
 			panel[15] = 10;
@@ -87,16 +129,18 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			panel[17] = 10;
 			panel[19] = 0;
 			panel[21] = 0;
-			int currentSpeed = (int)vehicleState.Speed;
-			double tolerance = abs(currentSpeed - cLimit.speed);
+			double tolerance = abs((int)currentSpeed - cLimit.speed);
 			if (tolerance < 2) {
 				sound[2] = ATS_SOUND_PLAY;
+				p_s_itemCount->keepConstantSpeed += 900;
 				evalute.setDisp(p_box, 5, 3);
 			} else if (tolerance < 6) {
 				sound[3] = ATS_SOUND_PLAY;
+				p_s_itemCount->keepConstantSpeed += 600;
 				evalute.setDisp(p_box, 5, 2);
 			} else if (tolerance < 11) {
 				sound[4] = ATS_SOUND_PLAY;
+				p_s_itemCount->keepConstantSpeed += 200;
 				evalute.setDisp(p_box, 5, 1);
 			} else {
 				evalute.setDisp(p_box, 5, 0);
@@ -108,10 +152,12 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			cLimit.distance = 0;
 			cLimit.speed = 0;
 			cLimit.noicePoint = -1.0;
+			if (p_cList->pointingConstant == false) evalute.setDisp(p_box, 3, 0);
+			p_cList->pointingConstant = false;
 		}
 	}
 }
-
+// ------------------------------------------------------------------
 void SPEED_NOICE::setSpeedLimit(int sendData) {
 	sLimit.scoring = (sendData / 1000000 > 0) ? true : false;
 	sLimit.distance = sendData / 1000 % 1000;
@@ -119,7 +165,7 @@ void SPEED_NOICE::setSpeedLimit(int sendData) {
 	sLimit.noicePoint = -1.0;
 	speedLimit = sLimit.speed;
 }
-
+// ------------------------------------------------------------------
 void SPEED_NOICE::setConstantSpeed(int sendData) {
 	cLimit.scoring = (sendData / 1000000 > 0) ? true : false;
 	cLimit.distance = sendData / 1000 % 1000;
@@ -127,11 +173,27 @@ void SPEED_NOICE::setConstantSpeed(int sendData) {
 	cLimit.noicePoint = -1.0;
 	constantSpeed = cLimit.speed;
 }
+// ------------------------------------------------------------------
+int SPEED_NOICE::getStar(int i, double d) {
+	double val = d / i;
+	if (val > 1.0 / 3.0 * 2.0) {
+		return 1;
+	} else if (val > 1.0 / 3.0) {
+		return 2;
+	} else {
+		return 3;
+	}
+	return 0;
+}
+// ------------------------------------------------------------------
 // 構造体ポインタ取得
 void SPEED_NOICE::setBoxPointer(dispEvalute *p) { p_box = p; }
-
 int SPEED_NOICE::getSpeedLimit() { return speedLimit; }
 int SPEED_NOICE::getCurrentSpeedLimit() { return currentSpeedLimit; }
+void SPEED_NOICE::setKey(bool b) { keyPush = b; }
+void SPEED_NOICE::setDoorState(bool b) { doorOpen = b; }
+void SPEED_NOICE::setChechedListPointer(checkedList* p) { p_cList = p; }
+void SPEED_NOICE::setScoringItemsCountPointer(scoringItemsCount* p) { p_s_itemCount = p; }
 // ------------------------------------------------------------------
 // 指定桁の数字を返す
 // 0の時rtを返す

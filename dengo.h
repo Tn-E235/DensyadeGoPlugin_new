@@ -18,17 +18,19 @@ class DENGO{
 		void main(ATS_VEHICLESTATE, int*, int*);
 		void brakeState(int);
 		void powerState(int);
+		void emergencyBrake(int);
 		void reverserState(int);
 		void keyDown(int);
 		void keyUp(int);
+		void hornBlow(int);
 		void doorState(bool);
 		void beaconData(ATS_BEACONDATA);
-
+		int speedLimit();
+		int getDigitOfNumber(int, int, int);
 	private:
 		void panelOut(int*);
 		void remainningDistance(int*);
 		void remainningTime(int*);
-		int getDigitOfNumber(int, int, int);
 		void updateInfo(int*);
 
 		bool doorOpen;				// ÉhÉAèÛë‘
@@ -50,10 +52,14 @@ class DENGO{
 		STATION_DB station;
 		SPEED_NOICE s_noice;
 		EVALUTE evalute;
+		RESULT result;
 
 		struct stationData* p_station = nullptr;
 		struct scenarioData* p_scenario = nullptr;
 		struct speedNoice* p_s_noice = nullptr;
 		struct dispEvalute* p_box = nullptr;
+		struct scoringItems* p_s_items = nullptr;
+		struct scoringItemsCount* p_s_itemsCount = nullptr;
+		struct checkedList* p_cList = nullptr;
 };
 

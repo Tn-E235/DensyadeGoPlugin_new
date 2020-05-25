@@ -91,6 +91,7 @@
     <ClCompile Include="dengo.cpp" />
     <ClCompile Include="evaluate.cpp" />
     <ClCompile Include="gSensor.cpp" />
+    <ClCompile Include="result.cpp" />
     <ClCompile Include="speedNoice.cpp" />
     <ClCompile Include="stationDB.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -107,6 +108,7 @@
     <ClInclude Include="dengo.h" />
     <ClInclude Include="evaluate.h" />
     <ClInclude Include="gSensor.h" />
+    <ClInclude Include="result.h" />
     <ClInclude Include="speedNoice.h" />
     <ClInclude Include="stationDB.h" />
     <ClInclude Include="stdafx.h" />

@@ -1,9 +1,10 @@
 #include "stdafx.h"
 #include "atsplugin.h"
-#include "gSensor.h"
+#include "result.h"
 #include "stationDB.h"
 #include "evaluate.h"
 #include "speedNoice.h"
+#include "gSensor.h"
 #include "dengo.h"
 #include "Ats.h"
 
@@ -12,6 +13,7 @@ ATS_API int WINAPI GetPluginVersion() { return ATS_VERSION; }
 ATS_API void WINAPI SetVehicleSpec(ATS_VEHICLESPEC vehicleSpec) {
 	g_svcBrake = vehicleSpec.BrakeNotches;
 	g_emgBrake = g_svcBrake + 1;
+	dgo.emergencyBrake(g_emgBrake);
 }
 ATS_API void WINAPI Initialize(int brake) { 
 	g_speed = 0; 
@@ -24,6 +26,11 @@ ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int *panel, int
 	g_output.Power = g_powerNotch;
 	g_output.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
 	dgo.main(vehicleState, panel, sound);
+	int speedLimit = dgo.speedLimit();
+	if (vehicleState.Speed > speedLimit + 1) {
+		g_output.Power = 0;
+		g_output.Brake = g_svcBrake;
+	}
     return g_output;
 }
 ATS_API void WINAPI SetPower(int notch) { 
@@ -44,7 +51,7 @@ ATS_API void WINAPI KeyDown(int keyCode) {
 ATS_API void WINAPI KeyUp(int keyCode) {
 	dgo.keyUp(keyCode);
 }
-ATS_API void WINAPI HornBlow(int atsHornBlowIndex) {}
+ATS_API void WINAPI HornBlow(int atsHornBlowIndex) { dgo.hornBlow(atsHornBlowIndex); }
 ATS_API void WINAPI DoorOpen() { 
 	g_pilotlamp = false; 
 	dgo.doorState(true);

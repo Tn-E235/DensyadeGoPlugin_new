@@ -3,7 +3,7 @@
 
 void STATION_DB::init() {
 	for (int i = 0; i < 100; ++i) {
-		s_data[i].num = 0;
+		s_data[i].num = -1;
 		s_data[i].arriveTime = 0;
 		s_data[i].leaveTime = 0;
 		s_data[i].stopDistance = -1;

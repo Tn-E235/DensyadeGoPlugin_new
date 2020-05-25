@@ -1,9 +1,10 @@
 #include "stdafx.h"
 #include "atsplugin.h"
+#include "result.h"
 #include "evaluate.h"
-#include "gSensor.h"
 #include "stationDB.h"
 #include "speedNoice.h"
+#include "gSensor.h"
 #include "dengo.h"
 #include <cmath>
 // ------------------------------------------------------------------
@@ -11,11 +12,22 @@ void DENGO::init() {
 	station.init();
 	evalute.init();
 	s_noice.init();
+	result.init();
 
-	p_station = station.getStationDataPointer();
-	p_box = evalute.getBoxPointer();
+	p_station      = station.getStationDataPointer();
+	p_box          = evalute.getBoxPointer();
+	p_s_itemsCount = result.getScoringItemsCountPointer();
+	p_cList        = result.getCheckedListPointer();
 
 	s_noice.setBoxPointer(p_box);
+	s_noice.setChechedListPointer(p_cList);
+	s_noice.setScoringItemsCountPointer(p_s_itemsCount);
+	evalute.setChechedListPointer(p_cList);
+	evalute.setScoringItemsCountPointer(p_s_itemsCount);
+
+	gsensor.setChechedListPointer(p_cList);
+	gsensor.setScoringItemsCountPointer(p_s_itemsCount);
+	gsensor.setBoxPointer(p_box);
 
 	update = true;
 	updateCurrentStation = 0;
@@ -26,6 +38,13 @@ void DENGO::init() {
 }
 // ------------------------------------------------------------------
 void DENGO::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound){
+	sound[0] = ATS_SOUND_CONTINUE;
+	sound[1] = ATS_SOUND_CONTINUE;
+	sound[2] = ATS_SOUND_CONTINUE;
+	sound[3] = ATS_SOUND_CONTINUE;
+	sound[4] = ATS_SOUND_CONTINUE;
+	sound[5] = ATS_SOUND_CONTINUE;
+
 	currentSpeed = vehicleState.Speed;
 	currentTime = vehicleState.Time;
 	currentZposition = vehicleState.Location;
@@ -33,16 +52,45 @@ void DENGO::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound){
 	gsensor.calc(vehicleState);
 	s_noice.main(vehicleState, panel, sound);
 	evalute.main(vehicleState, panel, sound);
+	result.main(vehicleState, panel, sound);
 
 	panelOut(panel);
 }
 // ------------------------------------------------------------------
-void DENGO::brakeState(int notch) { b_notch = notch; }
-void DENGO::powerState(int notch) { p_notch = notch; }
-void DENGO::reverserState(int pos) { reverser = pos; }
-void DENGO::keyDown(int keyCode) {}
-void DENGO::keyUp(int keyCode) {}
-void DENGO::doorState(bool state) { doorOpen = state; }
+void DENGO::brakeState(int notch) {
+	b_notch = notch;
+	evalute.setNotchState(b_notch, p_notch);
+}
+// ------------------------------------------------------------------
+void DENGO::powerState(int notch) { 
+	p_notch = notch; 
+	evalute.setNotchState(b_notch, p_notch);
+}
+// ------------------------------------------------------------------
+void DENGO::keyDown(int keyCode) {
+	if (keyCode == 0) {
+		evalute.setKey(true);
+		s_noice.setKey(true);
+		result.setKey(true);
+		return;
+	}
+}
+// ------------------------------------------------------------------
+void DENGO::keyUp(int keyCode) {
+	if (keyCode == 0) {
+		evalute.setKey(false);
+		s_noice.setKey(false);
+		result.setKey(false);
+		return;
+	}
+}
+// ------------------------------------------------------------------
+void DENGO::doorState(bool state) { 
+	doorOpen = state; 
+	result.setDoorState(state);
+	evalute.setDoorState(state);
+	s_noice.setDoorState(state);
+}
 // ------------------------------------------------------------------
 void DENGO::beaconData(ATS_BEACONDATA beaconData) {
 	int beaconType = beaconData.Type;
@@ -76,17 +124,23 @@ void DENGO::beaconData(ATS_BEACONDATA beaconData) {
 			updateCurrentStation = sendData - 1;
 			break;
 		case DGO_SET_IN_STATION:
+			evalute.setInStation(sendData);
 			break;
 		case  DGO_SET_HORN:
+			evalute.setHornInfo(sendData);
 			break;
 		default:
 			break;
 	}
 }
+int DENGO::speedLimit() { return s_noice.getCurrentSpeedLimit(); }
+// ------------------------------------------------------------------
+void DENGO::emergencyBrake(int notch) { evalute.setEBnotch(notch); }
+void DENGO::reverserState(int pos) { reverser = pos; }
+void DENGO::hornBlow(int hornType) { evalute.setHornKey(hornType); }
 // ------------------------------------------------------------------
 void DENGO::panelOut(int* panel) {
-	// çXêVèàóù
-	if (update) updateInfo(panel);
+	
 	// --------------------------------------------------------------
 	// åªç›ë¨ìxï\é¶
 	panel[0] = getDigitOfNumber((int)currentSpeed, 3, 10);
@@ -100,7 +154,7 @@ void DENGO::panelOut(int* panel) {
 	panel[5] = getDigitOfNumber(currentSpeedLimit, 1,  0);
 	// --------------------------------------------------------------
 	// åªç›éûçèï\é¶
-	if (target) {
+	if (target && !finalStop) {
 		int time = currentTime / 1000;
 		int time_h = time / 3600;
 		int time_m = (time - time_h * 3600) / 60;
@@ -135,41 +189,46 @@ void DENGO::panelOut(int* panel) {
 	// --------------------------------------------------------------
 	// écãóó£
 	remainningDistance(panel);
+
+	// çXêVèàóù
+	if (update) updateInfo(panel);
 }
 // ------------------------------------------------------------------
 // écãóó£ÇåvéZÇ∑ÇÈèàóù
 void DENGO::remainningDistance(int* panel) {
 	if (finalStop) {
-		panel[34] = 0;
-		panel[35] = 0;
-		panel[36] = 0;
-		panel[37] = 0;
-		panel[38] = 0;
-		panel[43] = 0;
+		panel[34] = 30;
+		panel[35] = 30;
+		panel[36] = 30;
+		panel[37] = 30;
+		panel[38] = 4;
+		panel[43] = 4;
 		return;
 	}
+
 	int stopDistance = station.getStopDistance(nextStation);
 	double remainningDistance = stopDistance - currentZposition;
 	stationData s = station.getStationData(nextStation);
 	bool isPass = station.isPass(s);
 	int color = 0;
-	int unit = 1;
+	double unit = 1.0;
 	int over = 1;
 	if (!isPass) {
 		over = 0;
 		if (abs(remainningDistance) < 10.0) {
 			color = 10;
 			if (remainningDistance > -5.0 && remainningDistance < 5.0) 
-				unit = 1000;
+				unit = 1000.0;
 		} else if (remainningDistance < -5) {
 			color = 20;
 		}
 		if (remainningDistance < 0.0) over = 2;
 	}
-	panel[34] = getDigitOfNumber(abs((int)remainningDistance)*unit, 4, 30)+color;
-	panel[35] = getDigitOfNumber(abs((int)remainningDistance)*unit, 3, 30)+color;
-	panel[36] = getDigitOfNumber(abs((int)remainningDistance)*unit, 2, 30)+color;
-	panel[37] = getDigitOfNumber(abs((int)remainningDistance)*unit, 1,  0)+color;
+	result.setRemainnigDistance(remainningDistance*unit);
+	panel[34] = getDigitOfNumber((int)(abs(remainningDistance)*unit), 4, 30)+color;
+	panel[35] = getDigitOfNumber((int)(abs(remainningDistance)*unit), 3, 30)+color;
+	panel[36] = getDigitOfNumber((int)(abs(remainningDistance)*unit), 2, 30)+color;
+	panel[37] = getDigitOfNumber((int)(abs(remainningDistance)*unit), 1,  0)+color;
 	panel[38] = over;
 	panel[43] = (unit == 1) ? 0 : 1;
 }
@@ -177,10 +236,10 @@ void DENGO::remainningDistance(int* panel) {
 // écÇËéûä‘ÇåvéZÇ∑ÇÈèàóù
 void DENGO::remainningTime(int* panel) {
 	if (finalStop) {
-		panel[31] = 0;
-		panel[32] = 0;
-		panel[33] = 0;
-		panel[39] = 0;
+		panel[31] = 30;
+		panel[32] = 30;
+		panel[33] = 30;
+		panel[39] = 30;
 		return;
 	}
 
@@ -190,7 +249,7 @@ void DENGO::remainningTime(int* panel) {
 	int mode = 0;
 
 	if (mode == 0) {
-		int arriveTime = station.getArriveTime(nextStation);
+		int arriveTime = station.getArriveTime(nextStopStation-1);
 		// 12:34:56
 		int h = arriveTime / 10000;
 		int m = arriveTime / 100 % 100;
@@ -205,6 +264,7 @@ void DENGO::remainningTime(int* panel) {
 		}
 		if (remainningTime < 0) over = 2;
 	}
+	result.setRemainningTime(remainningTime);
 	panel[31] = getDigitOfNumber(abs(remainningTime), 3, 30) + color;
 	panel[32] = getDigitOfNumber(abs(remainningTime), 2, 30) + color;
 	panel[33] = getDigitOfNumber(abs(remainningTime), 1,  0) + color;
@@ -245,30 +305,29 @@ void DENGO::updateInfo(int* panel) {
 		update = false;
 		return;
 	}
-
 	currentStation = updateCurrentStation;	// é©é‘åªç›âwÇçXêV
 	nextStation = currentStation + 1;		// éüâwÇê›íË
 	stationData nextStopData =				// éüâwí‚é‘âwÇê›íË
 		station.getNextStopStationData(currentStation);
 	nextStopStation = station.getNum(nextStopData);		// éüâwâwî‘çÜ
 	finalStop = (nextStopStation < 0) ? true : false;	// èIíÖâwîªíË
-
+	result.setStaNum(nextStopStation);
 	if (finalStop) {
 		// ëñçsãÊä‘ï\é¶
-		// panel[25] = 0;
-		// panel[26] = 0;
+		panel[25] = 0;
+		panel[26] = 0;
 		// ñ⁄ïWí‚é‘âw
-		// panel[27] = 0;
-		// panel[28] = 0;
-		// panel[29] = 0;
-		// panel[30] = 0;
+		panel[27] = 0;
+		panel[28] = 0;
+		panel[29] = 0;
+		panel[30] = 0;
 		// ñ⁄ïWí‚é‘âw
-		// panel[27] = 0;
-		// panel[28] = 25;
-		// panel[29] = 61;
-		// panel[30] = 61;
-		// panel[40] = 0;
-		// panel[41] = 0;
+		panel[27] = 0;
+		panel[28] = 25;
+		panel[29] = 61;
+		panel[30] = 61;
+		panel[40] = 0;
+		panel[41] = 0;
 		return;
 	}
 	// --------------------------------------------------------------
@@ -303,7 +362,7 @@ void DENGO::updateInfo(int* panel) {
 		panel[41] = (targetIsPass) ? 2 : 1;
 	} else {
 		panel[27] = 0;
-		panel[28] = 25;
+		panel[28] = 61;
 		panel[29] = 61;
 		panel[30] = 61;
 		panel[40] = 0;
