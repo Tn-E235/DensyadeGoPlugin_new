@@ -154,7 +154,7 @@ void DENGO::panelOut(int* panel) {
 	panel[5] = getDigitOfNumber(currentSpeedLimit, 1,  0);
 	// --------------------------------------------------------------
 	// 現在時刻表示
-	if (target) {
+	if (target && !finalStop) {
 		int time = currentTime / 1000;
 		int time_h = time / 3600;
 		int time_m = (time - time_h * 3600) / 60;
@@ -197,12 +197,12 @@ void DENGO::panelOut(int* panel) {
 // 残距離を計算する処理
 void DENGO::remainningDistance(int* panel) {
 	if (finalStop) {
-		panel[34] = 0;
-		panel[35] = 0;
-		panel[36] = 0;
-		panel[37] = 0;
-		panel[38] = 0;
-		panel[43] = 0;
+		panel[34] = 30;
+		panel[35] = 30;
+		panel[36] = 30;
+		panel[37] = 30;
+		panel[38] = 4;
+		panel[43] = 4;
 		return;
 	}
 
@@ -236,10 +236,10 @@ void DENGO::remainningDistance(int* panel) {
 // 残り時間を計算する処理
 void DENGO::remainningTime(int* panel) {
 	if (finalStop) {
-		panel[31] = 0;
-		panel[32] = 0;
-		panel[33] = 0;
-		panel[39] = 0;
+		panel[31] = 30;
+		panel[32] = 30;
+		panel[33] = 30;
+		panel[39] = 30;
 		return;
 	}
 
@@ -314,20 +314,20 @@ void DENGO::updateInfo(int* panel) {
 	result.setStaNum(nextStopStation);
 	if (finalStop) {
 		// 走行区間表示
-		// panel[25] = 0;
-		// panel[26] = 0;
+		panel[25] = 0;
+		panel[26] = 0;
 		// 目標停車駅
-		// panel[27] = 0;
-		// panel[28] = 0;
-		// panel[29] = 0;
-		// panel[30] = 0;
+		panel[27] = 0;
+		panel[28] = 0;
+		panel[29] = 0;
+		panel[30] = 0;
 		// 目標停車駅
-		// panel[27] = 0;
-		// panel[28] = 25;
-		// panel[29] = 61;
-		// panel[30] = 61;
-		// panel[40] = 0;
-		// panel[41] = 0;
+		panel[27] = 0;
+		panel[28] = 25;
+		panel[29] = 61;
+		panel[30] = 61;
+		panel[40] = 0;
+		panel[41] = 0;
 		return;
 	}
 	// --------------------------------------------------------------
@@ -362,7 +362,7 @@ void DENGO::updateInfo(int* panel) {
 		panel[41] = (targetIsPass) ? 2 : 1;
 	} else {
 		panel[27] = 0;
-		panel[28] = 25;
+		panel[28] = 61;
 		panel[29] = 61;
 		panel[30] = 61;
 		panel[40] = 0;

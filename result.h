@@ -16,7 +16,7 @@ struct checkedList {
 	bool reAccelerateInForm;		// 構内再加速
 	bool brakeReload;				// ブレーキ込め直し
 	bool overRun;					// オーバーラン
-	bool speedOver;
+	bool speedOver;					// 制限速度オーバー
 };
 // スコア
 struct  scoringItemsCount {
@@ -31,7 +31,7 @@ struct  scoringItemsCount {
 	int eBrake;						// 非常ブレーキ
 	bool reAccelerateInForm;		// 構内再加速
 	bool brakeReload;				// ブレーキ込め直し
-	int speedOver;
+	int speedOver;					// 制限速度オーバー
 };
 class RESULT {
 	public:

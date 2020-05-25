@@ -75,7 +75,9 @@ void EVALUTE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 	// ブレーキ込め直し
 	brakeReload(sound);
 	// 後退したらオーバーラン判定
-	if (currentSpeed < -1 && p_notch > 0 ) p_cList->overRun = true;
+	if (currentSpeed < 0 && p_notch > 0 && b_notch == 0) { 
+		p_cList->overRun = true; 
+	}
 	disp(panel);
 	updateInfo();
 }
@@ -102,7 +104,6 @@ void EVALUTE::setDisp(dispEvalute* po, int i, int s) {
 // ------------------------------------------------------------------
 void EVALUTE::updateInfo() {
 	for (int i = 0; i < 5; ++i) {
-		// if (box[i].idx > 0) box[i].totalTime = (int)(box[i].totalTime + (1000.0/60.0));// 1/60秒;
 		if (box[i].idx > 0) box[i].totalTime = box[i].totalTime + delta_T;// 1/60秒;
 		if (box[i].totalTime > 3000) init(i);
 	}
@@ -166,7 +167,7 @@ void EVALUTE::pointingPilotLamp(int* sound) {
 				if (p_cList->pointingPilotLamp) return;
 				// ☆3
 				p_cList->pointingPilotLamp = true;
-				p_s_itemCount->pointingPilotLamp = 300;
+				p_s_itemCount->pointingPilotLamp = 500;
 				sound[0] = ATS_SOUND_PLAY;
 				setDisp(1, 3);
 			}
@@ -174,7 +175,7 @@ void EVALUTE::pointingPilotLamp(int* sound) {
 			// ☆0
 			if (p_cList->pointingPilotLamp) return;
 			p_cList->pointingPilotLamp = true;
-			p_s_itemCount->pointingPilotLamp = -300;
+			p_s_itemCount->pointingPilotLamp = -500;
 			setDisp(1, 0);
 		}
 	}
@@ -185,12 +186,12 @@ void EVALUTE::acclerateAfterDoorClose(int* sound) {
 		if (p_cList->accelerateAfterDoorClose) return;
 		if (!doorOpen) {
 			// ☆3
-			p_s_itemCount->accelerateAfterDoorClose = 300;
+			p_s_itemCount->accelerateAfterDoorClose = 500;
 			sound[0] = ATS_SOUND_PLAY;
 			setDisp(2, 3);
 		} else {
 			// ☆0
-			p_s_itemCount->accelerateAfterDoorClose = -300;
+			p_s_itemCount->accelerateAfterDoorClose = -500;
 			setDisp(2, 0);
 		}
 		p_cList->accelerateAfterDoorClose = true;
@@ -224,7 +225,7 @@ void EVALUTE::hornTo(int* sound) {
 			hornInfo[i].noicePoint + (double)hornInfo[i].distance - currentDistance;
 		if (hornKey) {
 			int star = getStar(hornInfo[i].distance, remainingDistance);
-			p_s_itemCount->hornTo += star * 100;
+			p_s_itemCount->hornTo += star * 300;
 			setDisp(6+i, star);
 			hornInfo[i].enable = false;
 			sound[0] = ATS_SOUND_PLAY;
@@ -242,7 +243,7 @@ void EVALUTE::emergencyBrake(int*) {
 	if(b_notch != ebNotch) isEB = false;
 	if (b_notch == ebNotch && !isEB && currentSpeed > 0) {
 		isEB = true;
-		p_s_itemCount->eBrake -= 300;
+		p_s_itemCount->eBrake++;
 		if (currentSpeed >= 20) {
 			setDisp(11, 0);
 		} else {
@@ -269,7 +270,7 @@ void EVALUTE::brakeReload(int*) {
 	if (maxBnotchInStation == -1) {
 		if (b_b_notch < b_notch) {
 			p_cList->brakeReload = true;
-			p_s_itemCount->brakeReload = -300;
+			p_s_itemCount->brakeReload++;
 		}
 	} else if (b_b_notch == b_notch) {
 		brakeDuration += delta_T; 

@@ -27,7 +27,10 @@ ATS_API ATS_HANDLES WINAPI Elapse(ATS_VEHICLESTATE vehicleState, int *panel, int
 	g_output.ConstantSpeed = ATS_CONSTANTSPEED_CONTINUE;
 	dgo.main(vehicleState, panel, sound);
 	int speedLimit = dgo.speedLimit();
-	if (vehicleState.Speed / 1000 > speedLimit ) g_output.Brake = g_svcBrake;
+	if (vehicleState.Speed > speedLimit + 1) {
+		g_output.Power = 0;
+		g_output.Brake = g_svcBrake;
+	}
     return g_output;
 }
 ATS_API void WINAPI SetPower(int notch) { 

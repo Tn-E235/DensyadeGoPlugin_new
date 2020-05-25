@@ -69,7 +69,7 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 				int star = 
 					getStar(sLimit.distance, sLimit.distance - abs(remainningDistance));
 				evalute.setDisp(p_box, 3, star);
-				p_s_itemCount->pointingSpeed += star * 100;
+				p_s_itemCount->pointingSpeed += star * 300;
 				sound[0] = ATS_SOUND_PLAY;
 			}
 		}
@@ -119,7 +119,7 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 				int star =
 					getStar(cLimit.distance, cLimit.distance - abs(remainningDistance));
 				evalute.setDisp(p_box, 3, star);
-				p_s_itemCount->pointingSpeed += star * 100;
+				p_s_itemCount->pointingSpeed += star * 300;
 				sound[0] = ATS_SOUND_PLAY;
 			}
 		}
@@ -132,15 +132,15 @@ void SPEED_NOICE::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
 			double tolerance = abs((int)currentSpeed - cLimit.speed);
 			if (tolerance < 2) {
 				sound[2] = ATS_SOUND_PLAY;
-				p_s_itemCount->keepConstantSpeed += 300;
+				p_s_itemCount->keepConstantSpeed += 900;
 				evalute.setDisp(p_box, 5, 3);
 			} else if (tolerance < 6) {
 				sound[3] = ATS_SOUND_PLAY;
-				p_s_itemCount->keepConstantSpeed += 200;
+				p_s_itemCount->keepConstantSpeed += 600;
 				evalute.setDisp(p_box, 5, 2);
 			} else if (tolerance < 11) {
 				sound[4] = ATS_SOUND_PLAY;
-				p_s_itemCount->keepConstantSpeed += 100;
+				p_s_itemCount->keepConstantSpeed += 200;
 				evalute.setDisp(p_box, 5, 1);
 			} else {
 				evalute.setDisp(p_box, 5, 0);

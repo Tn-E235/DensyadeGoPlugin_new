@@ -3,8 +3,7 @@
 #include "result.h"
 // ------------------------------------------------------------------
 void RESULT::init() {
-	resetScoringItemsCount();
-	resetCheckedList();
+	reset();
 	score = -1;
 	totalScore = 0;
 	doorOpen = false;
@@ -24,26 +23,27 @@ void RESULT::resetScoringItemsCount() {
 	ps_itemCount->eBrake = 0;					// 非常ブレーキ
 	ps_itemCount->reAccelerateInForm = 0;		// 構内再加速
 	ps_itemCount->brakeReload = 0;				// ブレーキ込め直し
-	ps_itemCount->speedOver = 0;
+	ps_itemCount->speedOver = 0;				// 制限速度オーバー
 }
 // ------------------------------------------------------------------
 void RESULT::resetCheckedList() {
-	p_cList->pointingPilotLamp = false;
-	p_cList->accelerateAfterDoorClose = false;
-	p_cList->pointingSpeed = false;
-	p_cList->keepSpeedLimit = false;
-	p_cList->keepConstantSpeed = false;
-	p_cList->hornToWolker = false;
-	p_cList->hornToBridge = false;
-	p_cList->hornToPassenger = false;
-	p_cList->reducedLight = false;
-	p_cList->Gsenser = false;
-	p_cList->ebOver20 = false;
-	p_cList->ebStopping = false;
-	p_cList->reAccelerateInForm = false;
-	p_cList->brakeReload = false;
-	p_cList->overRun = false;
-	p_cList->speedOver = false;
+	p_cList->pointingPilotLamp = false;			// 戸閉指差喚呼
+	p_cList->accelerateAfterDoorClose = false;	// 戸閉後加速
+	p_cList->pointingSpeed = false;				// 速度計指差喚呼
+	p_cList->pointingConstant = false;			// 速度計指差喚呼
+	p_cList->keepSpeedLimit = false;			// 制限速度遵守
+	p_cList->keepConstantSpeed = false;			// 定速ﾎﾟｲﾝﾄ遵守
+	p_cList->hornToWolker = false;				// 保線作業員に警笛
+	p_cList->hornToBridge = false;				// 鉄橋に警笛
+	p_cList->hornToPassenger = false;			// ホーム乗客に警笛
+	p_cList->reducedLight = false;				// すれ違い車両に減光
+	p_cList->Gsenser = false;					// Gセンサー作動
+	p_cList->ebOver20 = false;					// 急制動(20km/hでEB)
+	p_cList->ebStopping = false;				// 非常停車(EB)
+	p_cList->reAccelerateInForm = false;		// 構内再加速
+	p_cList->brakeReload = false;				// ブレーキ込め直し
+	p_cList->overRun = false;					// オーバーラン
+	p_cList->speedOver = false;					// 制限速度オーバー
 }
 // ------------------------------------------------------------------
 void RESULT::main(ATS_VEHICLESTATE vehicleState, int* panel, int* sound) {
@@ -182,26 +182,47 @@ void RESULT::dispResult(bool b, int* panel) {
 int RESULT::calcScore() {
 	// 始発駅には変な値が入るためスコアに加算しない
 	int subScore = 0;
-	int distance = pow((3000.0-remainningDistance)/100.0,3);
+	// 停止位置誤差評価(評価値)
+	int distance = 
+		(int)pow((3000.0-(double)abs(remainningDistance))/100.0, 3);
 	if (distance < 0) distance = 0;
-	int time = pow(30.0 - remainningTime, 3);
+	// 停止時間誤差評価(評価値)
+	int time = (int)pow(30.0 - (double)abs(remainningTime), 3);
 	if (time < 0) time = 0;
+	// 指差喚呼評価(評価値)
 	int pointing = ps_itemCount->pointingPilotLamp;
 		pointing += ps_itemCount->accelerateAfterDoorClose;
 		pointing += ps_itemCount->pointingSpeed;
+	// 制限速度評価(評価値)
 	int speedLimit = ps_itemCount->keepSpeedLimit;
 		speedLimit += ps_itemCount->keepConstantSpeed;
+	// 警笛評価(評価値)
 	int horn = ps_itemCount->hornTo;
-	int gsensor = ps_itemCount->gSensor;
-	int eBrake = ps_itemCount->eBrake;
-	int reAcc = ps_itemCount->reAccelerateInForm * -2500;
-	int breakReload = (cList.brakeReload) ? 1000 : 0;
-	int overRun = (cList.overRun) ? -10000 : 0;
+	// Gセンサー評価(回数)
+	int gsensor = ps_itemCount->gSensor * -2500;
+	// 非常ブレーキ評価(回数)
+	int eBrake = ps_itemCount->eBrake * -1000;
+	// 構内再加速の評価(T/F)
+	int reAcc = (p_cList->reAccelerateInForm) ? -5000 : 0;
+	// ブレーキ込め直し評価(T/F)
+	int breakReload = (p_cList->brakeReload) ? -2500 : 0;
+	// オーバーラン判定(T/F)
+	int overRun = (p_cList->overRun) ? -10000 : 0;
+	if (p_cList->overRun) distance = 0;
+	
 	subScore =
-		distance + time + pointing + speedLimit +
-		horn + gsensor + eBrake + reAcc + breakReload + overRun;
+		distance + 
+		time + 
+		pointing + 
+		speedLimit +
+		horn + 
+		gsensor + 
+		eBrake + 
+		reAcc + 
+		breakReload + 
+		overRun;
 
-	return 	(subScore > 0 ) ? subScore : 0 ;
+	return 	(subScore > 0) ? subScore : 0 ;
 }
 // ------------------------------------------------------------------
 int RESULT::evaluteScore(int n) {
