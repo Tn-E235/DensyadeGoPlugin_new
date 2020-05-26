@@ -30,7 +30,7 @@ void G_SENSOR::calc(ATS_VEHICLESTATE vehicleState) {
 	if (g_value > 325) { 
 		if (!g_over) { 
 			if (acceleration[0] >= 0.5) {
-				p_s_itemCount->gSensor++;
+				p_s_itemCount->gSensor -= 300;
 				p_cList->Gsenser = true;
 				evalute.setDisp(p_box, 10, 0);
 			}
