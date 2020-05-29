@@ -369,3 +369,5 @@ void DENGO::updateInfo(int* panel) {
 		panel[41] = 0;
 	}
 }
+// ------------------------------------------------------------------
+void DENGO::setGsensorLimit(int n) { gsensor.setUpper((double)n/10); }

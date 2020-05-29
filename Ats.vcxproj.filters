@@ -79,5 +79,8 @@
     <ClInclude Include="result.h">
       <Filter>Header Files\dengo</Filter>
     </ClInclude>
+    <ClInclude Include="inputIni.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

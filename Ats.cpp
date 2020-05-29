@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "atsplugin.h"
+#include "inputIni.h"
 #include "result.h"
 #include "stationDB.h"
 #include "evaluate.h"
@@ -8,7 +9,18 @@
 #include "dengo.h"
 #include "Ats.h"
 
-BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved){return TRUE;}
+BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved){
+	char filePath[_MAX_PATH + 1] = _T("");						// ファイルパス格納
+	char* posIni;												// 検索文字列へのポインタ
+	bool loadCheck;												// INIファイルのロードに成功したかどうか
+	::GetModuleFileName((HMODULE)hModule, filePath, _MAX_PATH);	// Ats.dllのファイルパスを取得
+	posIni = strstr(filePath, ".dll");							// パスから.dllの位置を検索
+	memmove(posIni, ".ini", 4);									// .dllを.iniに置換
+	loadCheck = dIni.load(filePath);							// INIファイルをロードして結果を取得
+	dgo.setGsensorLimit(dIni.GSENSOR.limit);					// Gセンサーの上限値を設定
+	
+	return TRUE;
+}
 ATS_API int WINAPI GetPluginVersion() { return ATS_VERSION; }
 ATS_API void WINAPI SetVehicleSpec(ATS_VEHICLESPEC vehicleSpec) {
 	g_svcBrake = vehicleSpec.BrakeNotches;
