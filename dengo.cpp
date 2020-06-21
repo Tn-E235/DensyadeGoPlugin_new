@@ -13,6 +13,7 @@ void DENGO::init() {
 	evalute.init();
 	s_noice.init();
 	result.init();
+	gsensor.init();
 
 	p_station      = station.getStationDataPointer();
 	p_box          = evalute.getBoxPointer();
@@ -369,3 +370,7 @@ void DENGO::updateInfo(int* panel) {
 		panel[41] = 0;
 	}
 }
+// ------------------------------------------------------------------
+void DENGO::setGsensorEnable(int i) { gsensor.setEnable(i); }
+void DENGO::setGsensorMode(int i) { gsensor.setMode(i); }
+void DENGO::setGsensorLimit(int n) { gsensor.setUpper((double)n / 100.0); }

@@ -4,42 +4,85 @@
 #include "evaluate.h"
 #include "gSensor.h"
 #include <cmath>
+
+void G_SENSOR::init() { 
+	g_value = 0.0;
+	g_over = false;
+	for (int i = 0; i < G_ARRAY; ++i) {
+		v_deltaTime[i] = 0;
+		v_speed[i] = 0.0;
+		v_time[i] = 0;
+		v_gValue[i] = 0.0;
+	}
+}
 // ------------------------------------------------------------------
 void G_SENSOR::calc(ATS_VEHICLESTATE vehicleState) {
-	double Gp = 0.0;
-	double gValue_b = g_value;	// 前回の値保持
-	// 加速度計算
-	double gSum = 0.0;
-	int gTime = 0;
-	int dT = 0;
+	delta_T = vehicleState.Time - currentTime;
+	currentTime = vehicleState.Time;
+	double currentSpeed = (double)vehicleState.Speed;
+	double g_sum = 0.0;
+	double acc_sum = 0.0;
 
-	for (int i = 9; i > 0; --i) {
-		d_acceleration[i] = d_acceleration[i - 1];
-		acceleration[i] = acceleration[i - 1];
-		deltaTime[i] = deltaTime[i - 1];
-		gSum += d_acceleration[i];
+	// 要素削除
+	for (int i = G_ARRAY - 1; i > 0; --i) {
+		v_time[i] = v_time[i - 1];
+		v_deltaTime[i] = v_deltaTime[i - 1];
+		v_speed[i] = v_speed[i - 1];
+		v_acceleration[i] = v_acceleration[i - 1];
+		v_gValue[i] = v_gValue[i - 1];
+		g_sum += v_gValue[i];
+		acc_sum += v_acceleration[i];
 	}
-	acceleration[0] = (double)vehicleState.Speed;
-	deltaTime[0] = vehicleState.Time;
-	d_acceleration[0] = 
-		abs((acceleration[1] - acceleration[0]) / (double)(deltaTime[1] - deltaTime[0]));
-	gSum += d_acceleration[0];
-	Gp = 1.0 + ((gSum - b_gSum) / b_gSum)
-		+ 5.0 * (double)((160.0 - acceleration[0]) / 1000.0);
-	g_value = 325.0 * gSum * Gp * 100.0 / g_max;
+
+	// 加速度計算
+	double acc = abs((currentSpeed - v_speed[0]) / (double)(currentTime - v_time[0]));// ★
+
+	// 現在の情報入力
+	v_deltaTime[0] = delta_T;	// 前ステップとの時間差
+	v_speed[0] = currentSpeed;	// 現在ステップの速度
+	v_time[0] = currentTime;	// 現在時刻
+	v_acceleration[0] = acc;	// 加速度
+	// --------------------------------------------------------------
+	if (!enable) {
+		g_value = 0;
+	} else if (mode == 1) {
+		acc_sum += acc;
+		double acc_avg = acc_sum / (double)G_ARRAY;
+		double g_sum_avg = g_sum / (double)G_ARRAY-1.0;
+		double Gp = 1.0 + ((acc_avg - g_sum_avg) / g_sum_avg)
+			+ 5.0 * (double)((160.0 - currentSpeed) / 10.0);
+		g_value = 325.0 * acc_avg * Gp / g_max;
+		v_gValue[0] = g_value;
+	} else if (mode == 2) {
+		acc_sum += acc;
+		// 加速度の変化率
+		// double rate = abs((v_acceleration[0] - v_acceleration[29]) / v_acceleration[29]);// ★
+		// double rate = abs((acc - acc_sum / (double)G_ARRAY) / (acc_sum / (double)G_ARRAY));// ★
+		// double rate = abs((acc + acc_sum) / (double)G_ARRAY)*100.0;// ★
+
+		// 加速度の差
+		double rate = abs((acc - acc_sum / (double)G_ARRAY))*10000.0;// ★
+
+		// 出力値
+		g_value = 325.0 * rate / g_max;
+		v_gValue[0] = g_value;	
+
+		g_value = (g_sum + g_value) / (double)G_ARRAY;
+	} else {
+		g_value = 0;
+	}
+	// --------------------------------------------------------------
+	// 共通
 	if (g_value > 325) { 
 		if (!g_over) { 
-			if (acceleration[0] >= 0.5) {
-				p_s_itemCount->gSensor++;
-				p_cList->Gsenser = true;
-				evalute.setDisp(p_box, 10, 0);
-			}
+			p_s_itemCount->gSensor++;
+			p_cList->Gsenser = true;
+			evalute.setDisp(p_box, 10, 0);
 		}
 		g_over = true;
 	} else {
 		g_over = false;
 	}
-	b_gSum = gSum;
 }
 // ------------------------------------------------------------------
 void G_SENSOR::dispGsensor(int* panel) {
@@ -63,6 +106,8 @@ void G_SENSOR::dispGsensor(int* panel) {
 	}
 }
 // ------------------------------------------------------------------
+void G_SENSOR::setEnable(int i) { enable = (i == 1) ? true : false; } 
+void G_SENSOR::setMode(int i) { mode = i; }
 void G_SENSOR::setUpper(double d) { g_max = d; }
 int G_SENSOR::getValue() { return (g_over) ? -1 : (int)g_value; }
 void G_SENSOR::setScoringItemsCountPointer(scoringItemsCount* p) { p_s_itemCount = p; }
