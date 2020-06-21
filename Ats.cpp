@@ -17,8 +17,9 @@ BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	posIni = strstr(filePath, ".dll");							// パスから.dllの位置を検索
 	memmove(posIni, ".ini", 4);									// .dllを.iniに置換
 	loadCheck = dIni.load(filePath);							// INIファイルをロードして結果を取得
+	dgo.setGsensorEnable(dIni.GSENSOR.enable);					// Gセンサー有効設定
+	dgo.setGsensorMode(dIni.GSENSOR.mode);						// Gセンサーのモードを設定
 	dgo.setGsensorLimit(dIni.GSENSOR.limit);					// Gセンサーの上限値を設定
-	
 	return TRUE;
 }
 ATS_API int WINAPI GetPluginVersion() { return ATS_VERSION; }

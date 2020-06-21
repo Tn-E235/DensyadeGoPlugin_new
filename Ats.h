@@ -10,4 +10,4 @@ int g_deltaT;			// ƒtƒŒ[ƒ€ŠÔ[ms/frame]
 
 ATS_HANDLES g_output;	// o
 DENGO dgo;
-Dgo_acIni dIni;
+inputIni dIni;

@@ -27,7 +27,9 @@ class DENGO{
 		void beaconData(ATS_BEACONDATA);
 		int speedLimit();
 		int getDigitOfNumber(int, int, int);
+		void setGsensorEnable(int);
 		void setGsensorLimit(int);
+		void setGsensorMode(int);
 	private:
 		void panelOut(int*);
 		void remainningDistance(int*);

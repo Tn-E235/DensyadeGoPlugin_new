@@ -1,5 +1,5 @@
 //
-// Generated on 2020/05/29 by inimoni 
+// Generated on 2020/06/21 by inimoni 
 //
 
 /*
@@ -32,8 +32,8 @@ Supplementation
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 
-#ifndef DGO_ACINI_H
-#define DGO_ACINI_H
+#ifndef ATSINI_H
+#define ATSINI_H
 
 #include <string>
 using namespace std;
@@ -54,15 +54,15 @@ namespace inimoni {
 };
 
 /**
-    dgo_ac.ini input output class.
+    Ats.ini input output class.
 */
-class Dgo_acIni
+class inputIni
 {
 public:
 
-    Dgo_acIni(string_t fname = _T(""))
+    inputIni(string_t fname = _T(""))
     {
-        initFileName = _T("./dgo_ac.ini"); //Default file.    
+        initFileName = _T("./Ats.ini"); //Default file.    
         init();
         load(fname);
     }
@@ -108,10 +108,11 @@ public:
     struct _GSENSOR
     {
         int      enable;
+        int      mode;
         int      limit;
     } GSENSOR;
 
-    // SOUND
+    // mode=1縺ｮ縺ｨ縺・逶ｮ螳・
     struct _SOUND
     {
         int      index0;
@@ -143,6 +144,7 @@ protected:
 
         s = _T("GSENSOR");
         inimoni::inirw(r, f, s, _T("enable           "), GSENSOR.enable);
+        inimoni::inirw(r, f, s, _T("mode             "), GSENSOR.mode);
         inimoni::inirw(r, f, s, _T("limit            "), GSENSOR.limit);
 
         s = _T("SOUND");
@@ -165,7 +167,8 @@ protected:
     void init()
     {
         GSENSOR.enable = 1;
-        GSENSOR.limit = 50;
+        GSENSOR.mode = 1;
+        GSENSOR.limit = 40;
         SOUND.index0 = 0;
         SOUND.index1 = 1;
         SOUND.index2 = 2;
@@ -179,7 +182,7 @@ protected:
         KEY.index = 0;
     }
 };
-typedef Dgo_acIni Dgo_acFile; //新旧互換
+typedef inputIni AtsFile; //新旧互換
 
 //---------------------------------------------------------------------------
 // Common method                                                             
