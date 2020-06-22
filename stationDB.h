@@ -36,6 +36,8 @@ class STATION_DB {
 		bool isPass(int);
 		bool isTarget(int);
 
+		int getStationNum(int);
+
 		stationData* getStationDataPointer();
 
 		stationData getStationData(int);

@@ -72,6 +72,12 @@ bool STATION_DB::isPass(int n) { return s_data[n].isPass; }
 bool STATION_DB::isTarget(stationData s) { return s.isTarget; }
 bool STATION_DB::isTarget(int n) { return s_data[n].isTarget; }
 
+int STATION_DB::getStationNum(int n) {
+	for (int i = 0; i < 99; ++i) 
+		if (s_data[i].num == n) return i;
+	return -1;
+}
+
 stationData* STATION_DB::getStationDataPointer() { return p; }
 
 stationData STATION_DB::getStationData(int n) { return s_data[n]; }

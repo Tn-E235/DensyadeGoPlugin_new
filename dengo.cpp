@@ -248,9 +248,10 @@ void DENGO::remainningTime(int* panel) {
 	int color = 0;
 	int over = 0;
 	int mode = 0;
-
+	int nextStopStationNum = station.getStationNum(nextStopStation);
 	if (mode == 0) {
-		int arriveTime = station.getArriveTime(nextStopStation-1);
+		// int arriveTime = station.getArriveTime(nextStopStation-1)
+		int arriveTime = station.getArriveTime(nextStopStationNum);
 		// 12:34:56
 		int h = arriveTime / 10000;
 		int m = arriveTime / 100 % 100;
@@ -369,6 +370,7 @@ void DENGO::updateInfo(int* panel) {
 		panel[40] = 0;
 		panel[41] = 0;
 	}
+	update = false;
 }
 // ------------------------------------------------------------------
 void DENGO::setGsensorEnable(int i) { gsensor.setEnable(i); }
