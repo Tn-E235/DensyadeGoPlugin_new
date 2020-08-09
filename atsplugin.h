@@ -141,3 +141,9 @@ ATS_API void WINAPI SetSignal(int);
 
 // Called when the beacon data is received
 ATS_API void WINAPI SetBeaconData(ATS_BEACONDATA);
+
+/// このプラグインがBVEによって読み込まれた時に呼び出される。
+ATS_API void WINAPI Load();
+
+/// このプラグインがBVEから解放された時に呼び出される。
+ATS_API void WINAPI Dispose();

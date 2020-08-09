@@ -76,4 +76,8 @@ ATS_API void WINAPI DoorClose() {
 ATS_API void WINAPI SetSignal(int signal) {}
 ATS_API void WINAPI SetBeaconData(ATS_BEACONDATA beaconData) {
 	dgo.beaconData(beaconData);
-} 
+}
+
+ATS_API void WINAPI Load() {}
+
+ATS_API void WINAPI Dispose() {}
