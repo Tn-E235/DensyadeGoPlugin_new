@@ -65,7 +65,7 @@ void RESULT::reset() {
 }
 // ------------------------------------------------------------------
 void RESULT::dispResult(int* panel) {
-	int unitDis = (remainningDistance < 0) ? 1 : 0;
+	int unitDis = (remainningDistance <= 5.0) ? 1 : 0;
 	int hugou = 0;
 	if (abs(remainningDistance) >= 1000) {
 		hugou = 3 + 3 * unitDis;
