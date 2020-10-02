@@ -62,10 +62,11 @@ void RESULT::reset() {
 	resetScoringItemsCount();
 	resetCheckedList();
 	score = 0;
+	remainningDistance = 9999;
 }
 // ------------------------------------------------------------------
 void RESULT::dispResult(int* panel) {
-	int unitDis = (remainningDistance <= 5.0) ? 1 : 0;
+	int unitDis = (remainningDistance <= 0.0) ? 1 : 0;
 	int hugou = 0;
 	if (abs(remainningDistance) >= 1000) {
 		hugou = 3 + 3 * unitDis;
@@ -75,22 +76,22 @@ void RESULT::dispResult(int* panel) {
 		hugou = 1 + 3 * unitDis;
 	}
 	panel[56] = 1;// ÉäÉUÉãÉgâÊñ 
-	panel[57] = unitDis;
+	panel[57] = (p_cList->overRun) ? 1 : 0;
 	panel[58] = hugou;
 	panel[59] = getDigitOfNumber(abs(remainningDistance), 4, 10);
 	panel[60] = getDigitOfNumber(abs(remainningDistance), 3, 10);
-	panel[61] = getDigitOfNumber(abs(remainningDistance), 2,  0);
-	panel[62] = getDigitOfNumber(abs(remainningDistance), 1,  0);
+	panel[61] = getDigitOfNumber(abs(remainningDistance), 2, 0);
+	panel[62] = getDigitOfNumber(abs(remainningDistance), 1, 0);
 	panel[63] = (remainningTime == 0) ? 1 : (remainningTime > 0) ? 2 : 3;
 	panel[64] = getDigitOfNumber(abs(remainningTime), 3, 10);
 	panel[65] = getDigitOfNumber(abs(remainningTime), 2, 10);
-	panel[66] = getDigitOfNumber(abs(remainningTime), 1,  0);
+	panel[66] = getDigitOfNumber(abs(remainningTime), 1, 0);
 	panel[67] = evaluteScore(1);
 	panel[68] = evaluteScore(2);
 	panel[69] = staNum;
 	panel[85] = 0;
 	panel[86] = (cList.reAccelerateInForm) ? 1 : 4;
-	panel[87] = (cList.brakeReload) ? 1 : 4 ;
+	panel[87] = (cList.brakeReload) ? 1 : 4;
 	panel[88] = (cList.Gsenser) ? 1 : 4;
 	panel[89] = 0;
 
@@ -105,7 +106,7 @@ void RESULT::dispResult(int* panel) {
 	panel[94] = getDigitOfNumber(out_s, 4, 10);
 	panel[95] = getDigitOfNumber(out_s, 3, 10);
 	panel[96] = getDigitOfNumber(out_s, 2, 10);
-	panel[97] = getDigitOfNumber(out_s, 1,  0);
+	panel[97] = getDigitOfNumber(out_s, 1, 0);
 	panel[98] = getDigitOfNumber(out_ts, 8, 10);
 	panel[99] = getDigitOfNumber(out_ts, 7, 10);
 	panel[100] = getDigitOfNumber(out_ts, 6, 10);
@@ -113,7 +114,7 @@ void RESULT::dispResult(int* panel) {
 	panel[102] = getDigitOfNumber(out_ts, 4, 10);
 	panel[103] = getDigitOfNumber(out_ts, 3, 10);
 	panel[104] = getDigitOfNumber(out_ts, 2, 10);
-	panel[105] = getDigitOfNumber(out_ts, 1,  0);
+	panel[105] = getDigitOfNumber(out_ts, 1, 0);
 	panel[106] = 0;
 	panel[107] = 0;
 	panel[108] = 0;
@@ -183,19 +184,19 @@ int RESULT::calcScore() {
 	// énî≠âwÇ…ÇÕïœÇ»ílÇ™ì¸ÇÈÇΩÇﬂÉXÉRÉAÇ…â¡éZÇµÇ»Ç¢
 	int subScore = 0;
 	// í‚é~à íuåÎç∑ï]âø(ï]âøíl)
-	int distance = 
-		(int)pow((3000.0-(double)abs(remainningDistance))/100.0, 3);
+	int distance =
+		(int)pow((3000.0 - (double)abs(remainningDistance)) / 100.0, 3);
 	if (distance < 0) distance = 0;
 	// í‚é~éûä‘åÎç∑ï]âø(ï]âøíl)
 	int time = (int)pow(30.0 - (double)abs(remainningTime), 3);
 	if (time < 0) time = 0;
 	// éwç∑ä´åƒï]âø(ï]âøíl)
 	int pointing = ps_itemCount->pointingPilotLamp;
-		pointing += ps_itemCount->accelerateAfterDoorClose;
-		pointing += ps_itemCount->pointingSpeed;
+	pointing += ps_itemCount->accelerateAfterDoorClose;
+	pointing += ps_itemCount->pointingSpeed;
 	// êßå¿ë¨ìxï]âø(ï]âøíl)
 	int speedLimit = ps_itemCount->keepSpeedLimit;
-		speedLimit += ps_itemCount->keepConstantSpeed;
+	speedLimit += ps_itemCount->keepConstantSpeed;
 	// åxìJï]âø(ï]âøíl)
 	int horn = ps_itemCount->hornTo;
 	// GÉZÉìÉTÅ[ï]âø(âÒêî)
@@ -209,20 +210,20 @@ int RESULT::calcScore() {
 	// ÉIÅ[ÉoÅ[ÉâÉìîªíË(T/F)
 	int overRun = (p_cList->overRun) ? -10000 : 0;
 	if (p_cList->overRun) distance = 0;
-	
+
 	subScore =
-		distance + 
-		time + 
-		pointing + 
+		distance +
+		time +
+		pointing +
 		speedLimit +
-		horn + 
-		gsensor + 
-		eBrake + 
-		reAcc + 
-		breakReload + 
+		horn +
+		gsensor +
+		eBrake +
+		reAcc +
+		breakReload +
 		overRun;
 
-	return 	(subScore > 0) ? subScore : 0 ;
+	return 	(subScore > 0) ? subScore : 0;
 }
 // ------------------------------------------------------------------
 int RESULT::evaluteScore(int n) {
@@ -278,7 +279,8 @@ int RESULT::getDigitOfNumber(int num, int digit, int rt) {
 // ------------------------------------------------------------------
 scoringItemsCount* RESULT::getScoringItemsCountPointer() { return ps_itemCount; }
 checkedList* RESULT::getCheckedListPointer() { return p_cList; }
-void RESULT::setRemainnigDistance(int dis) { remainningDistance = dis; }
+void RESULT::setRemainnigDistance(int dis) { // if (remainningDistance > dis) 
+	remainningDistance = dis; }
 void RESULT::setRemainningTime(int time) { remainningTime = time; }
 void RESULT::setStaNum(int num) { staNum = num; }
 void RESULT::setKey(bool b) { keyPush = b; }
