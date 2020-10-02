@@ -261,22 +261,41 @@ void EVALUTE::reAccelerateInForm(int*) {
 }
 // ------------------------------------------------------------------
 void EVALUTE::brakeReload(int*) {
+	int time = 500;
 	if (!inStation || p_cList->brakeReload) return;
-	if (b_b_notch > b_notch || brakeDuration > 300) {
-		// ブレーキ緩めたとき
-		maxBnotchInStation = -1;
-		brakeDuration = 1000;
-	}
-	if (maxBnotchInStation == -1) {
-		if (b_b_notch < b_notch) {
+	if (currentSpeed == 0.0) return;
+	if (b_b_notch < b_notch) {
+		// ブレーキ増
+		if (maxBnotchInStation < 0 && brakeDuration < time) {
+			// まだ最大ブレーキ段数が決まっていないとき
+			brakeDuration = 0;
+		} else if (maxBnotchInStation < b_notch) {
+			// 既に最大ブレーキ段数が決まっているとき
+			// ブレーキ込め直し=ture
+			p_cList->brakeReload = true;
+			p_s_itemCount->brakeReload++;
+		}
+		if (brakeDuration == 999) {
+			// 既に最大ブレーキ段数が決まっているとき
+			// ブレーキ込め直し=ture
 			p_cList->brakeReload = true;
 			p_s_itemCount->brakeReload++;
 		}
 	} else if (b_b_notch == b_notch) {
-		brakeDuration += delta_T; 
-	} else if (b_b_notch < b_notch) { 
-		brakeDuration = 0;
+		// 同じ
+		// ノッチ操作時間加算
+		if (b_notch > 0 && maxBnotchInStation < 0)
+			brakeDuration += delta_T;
+	} else if (b_b_notch > b_notch) {
+		// ブレーキ減
+		// 最大ブレーキ段数確定
+		maxBnotchInStation = b_b_notch;
+	}
+
+	if (brakeDuration > time && maxBnotchInStation < 0 && b_notch > 0) {
+		// 操作時間上限に達したとき、最大ブレーキ段数確定
 		maxBnotchInStation = b_notch;
+		brakeDuration = 999;
 	}
 	b_b_notch = b_notch;
 }
@@ -299,9 +318,11 @@ void EVALUTE::setHornKey(int type) {
 // ------------------------------------------------------------------
 void EVALUTE::setInStation(int sendData) {
 	inStation = true;
-	maxPnotchInStation = p_notch;
-	maxBnotchInStation = b_notch;
 	b_b_notch = b_notch;
+
+	maxPnotchInStation = p_notch;
+	maxBnotchInStation = (b_notch < 1) ? -1 : b_notch;
+	
 	p_cList->Gsenser = false;
 	brakeDuration = 0;
 }
